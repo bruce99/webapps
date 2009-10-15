@@ -1,0 +1,111 @@
+# Contributor: Phillip Smith <fukawi2@NO-SPAM.gmail.com>
+
+pkgname=postfixadmin
+pkgver=2.2.1.1
+pkigrel=1
+pkgdesc="Web based interface used to manage mailboxes, virtual domains and aliases. It also features support for vacation/out-of-the-office messages."
+arch=(any)
+url="http://postfixadmin.sourceforge.net/"
+license=('GPLv2')
+depends=('postfix' 'postgresql-libs' 'php<=5.2' 'apache')
+install=$pkgname.install
+backup=("srv/http/$pkgname/config.inc.php")
+source=("http://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz" 'httpd-postfixadmin.conf' 'create-maildir-script.php')
+md5sums=('d30f9b9ae5584308ad0cf84100f8ff24'
+         'dbe4f3d3daa53ed52d95890fca2b6141')
+
+build() {
+  msg "Nothing to compile for $pkgname"
+}
+
+package() {
+  _HTTPDIR="$pkgdir/etc/httpd/conf/extra"
+  _INSTDIR="$pkgdir/srv/http/$pkgname"
+  _DOCDIR="$pkgdir/usr/share/doc/$pkgname"
+  _LICDIR="$pkgdir/usr/share/licenses/$pkgname"
+  _BINDIR="$pkgdir/usr/bin"
+  
+	mkdir -p {$_INSTDIR,$_HTTPDIR} || return 1
+  
+	cp -r $pkgname-$pkgver/* $_INSTDIR || return 1
+  rm -Rf $_INSTDIR/VIRTUAL_VACATION || return 1
+  rm -Rf $_INSTDIR/debian || return 1
+
+  # Add some explainations to MOTD files
+  cat > $_INSTDIR/motd.txt << MOTD
+<!--
+//////////////////////////////////////////
+// This file is shown as a MOTD to all
+// *non-global* administrators
+//////////////////////////////////////////
+-->
+MOTD
+  cat > $_INSTDIR/motd-admin.txt << MOTD
+<!--
+//////////////////////////////////////////
+// This file is shown as a MOTD to all
+// *global* administrators
+//////////////////////////////////////////
+-->
+MOTD
+  cat > $_INSTDIR/motd-users.txt << MOTD
+<!--
+//////////////////////////////////////////
+// This file is shown as a MOTD to all
+// standard users (eg, non-admins)
+//////////////////////////////////////////
+-->
+MOTD
+
+  # Move scripts to a useful location
+  mkdir -p $_BINDIR || return 1
+  mv $_INSTDIR/ADDITIONS/*.sh $_BINDIR/ || return 1
+  mv $_INSTDIR/ADDITIONS/*.pl $_BINDIR/ || return 1
+  rm -f $_BINDIR/cleanupdirs.pl || return 1
+  rm -f $_BINDIR/convert-passwd-to-postfixadmin.pl || return 1
+  rm -f $_BINDIR/mailbox_remover.pl || return 1
+  rm -f $_BINDIR/mkeveryone.pl || return 1
+  rm -f $_BINDIR/pfa_maildir_cleanup.pl || return 1
+  rm -f $_BINDIR/virtualmaildel.php || return 1
+  chmod 755 $_BINDIR/* || return 1
+
+  # Fix up some config in scripts
+  _TRASHBASE='/srv/smtp/archive/domains'
+  mkdir -p $pkgdir/$_TRASHBASE
+  chown 5003:5003 $pkgdir/$_TRASHBASE
+  sed -i \
+    -e 's|^basedir=/var/spool/maildirs|basedir=/srv/smtp/domains|g' \
+    $_BINDIR/postfixadmin-mailbox-postcreation.sh
+  sed -i \
+    -e 's|^basedir=/var/spool/maildirs|basedir=/srv/smtp/domains|g' \
+    -e "s|^trashbase=/var/spool/deleted-maildirs|trashbase=$_TRASHBASE|g" \
+    $_BINDIR/postfixadmin-mailbox-postdeletion.sh
+  sed -i \
+    -e 's|^basedir=/var/spool/maildirs|basedir=/srv/smtp/domains|g' \
+    -e "s|^trashbase=/var/spool/deleted-maildirs|trashbase=$_TRASHBASE|g" \
+    $_BINDIR/postfixadmin-domain-postdeletion.sh
+
+  # Move the documentation to appropriate dir
+  mkdir -p $_DOCDIR || return 1
+  mv $_INSTDIR/DOCUMENTS/* $_DOCDIR || return 1
+  rmdir $_INSTDIR/DOCUMENTS || return 1
+  mv $_INSTDIR/CHANGELOG.TXT $_DOCDIR/ || return 1
+
+  # Move the licenses to appropriate dir
+  mkdir -p $_LICDIR || return 1
+  mv $_INSTDIR/GPL-LICENSE.TXT $_LICDIR/
+  mv $_INSTDIR/LICENSE.TXT $_LICDIR/
+ 
+  # Set correct permissions for /srv/http files
+  chown -R 0:33 $_INSTDIR || return 1
+  chmod -R u=rwX,g=rX,o= $_INSTDIR || return 1
+  chown -R 0:0 $_DOCDIR || return 1
+  chmod -R u=rwX,go=rX $_DOCDIR || return 1
+  chown -R 0:0 $_LICDIR || return 1
+  chmod -R u=rwX,go=rX $_LICDIR || return 1
+  
+  # Install the apache http conf file
+  install -Dm644 -o33 -g33 $srcdir/httpd-postfixadmin.conf $_HTTPDIR/httpd-postfixadmin.conf || return 1
+}
+
+# vim:set ts=2 sw=2 et:

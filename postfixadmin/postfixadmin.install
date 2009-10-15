@@ -1,0 +1,10 @@
+## arg 1:  the new package version
+post_install() {
+  echo "A default configuration file for Apache has been installed:"
+  echo "   /etc/httpd/conf/extra/httpd-postfixadmin.conf"
+  echo "Please review and include this file in your httpd.conf file"
+  echo ""
+  echo "Please read the installation instructions in /srv/http/postfixadmin/INSTALL.TXT"
+}
+
+# vim:set ts=2 sw=2 et:
