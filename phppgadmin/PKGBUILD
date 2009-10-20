@@ -1,0 +1,43 @@
+# Maintainer: wizzomafizzo <wizzomafizzo@gmail.com>
+# Contributor: Benjamin Andresen <benny@klapmuetz.org>
+pkgname=phppgadmin
+pkgver=4.2.2
+pkgrel=1
+pkgdesc="web-based administration tool for PostgreSQL."
+arch=('i686' 'x86_64')
+url="http://sourceforge.net/projects/phppgadmin"
+license=('GPL')
+depends=('php' 'postgresql')
+backup=('srv/http/phpPgAdmin/conf/config.inc.php'
+	'srv/http/phpPgAdmin/.htaccess')
+source=("http://downloads.sourceforge.net/sourceforge/$pkgname/phpPgAdmin-$pkgver.tar.gz")
+md5sums=('68280bb47d6420f423578a0a8d731051')
+
+build() {
+  msg "Nothing to compile for $pkgname"
+}
+
+package() {
+  _INSTDIR="srv/http/phppgadmin"
+  
+  # copy main app files into package
+  mkdir -p $pkgdir/$_INSTDIR
+  cp -ra $srcdir/phpPgAdmin-$pkgver/* $pkgdir/$_INSTDIR || return 1
+  
+  # create a default .htaccess file to block access except from localhost
+  cat > $pkgdir/$_INSTDIR/.htaccess << EOT
+deny from all
+allow from 127.0.0.1
+EOT
+  
+  # copy default config file into place
+  cp $srcdir/phpPgAdmin-$pkgver/conf/config.inc.php-dist $pkgdir/$_INSTDIR/conf/config.inc.php || return 1
+  
+  # install license
+  install -Dm644 $srcdir/phpPgAdmin-$pkgver/LICENSE $pkgdir/usr/share/licenses/$pkgname/LICENSE
+
+  # fix permissions
+  chown -R 0:33 $pkgdir/$_INSTDIR
+  chmod -R u=rwX,g=rX,o= $pkgdir/$_INSTDIR
+}
+# vim:set ts=2 sw=2 et:
