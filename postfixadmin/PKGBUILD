@@ -2,7 +2,7 @@
 
 pkgname=postfixadmin
 pkgver=2.2.1.1
-pkigrel=1
+pkgrel=1
 pkgdesc="Web based interface used to manage mailboxes, virtual domains and aliases. It also features support for vacation/out-of-the-office messages."
 arch=(any)
 url="http://postfixadmin.sourceforge.net/"
@@ -10,7 +10,7 @@ license=('GPLv2')
 depends=('postfix' 'postgresql-libs' 'php<=5.2' 'apache')
 install=$pkgname.install
 backup=("srv/http/$pkgname/config.inc.php")
-source=("http://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz" 'httpd-postfixadmin.conf' 'create-maildir-script.php')
+source=("http://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz" 'httpd-postfixadmin.conf')
 md5sums=('d30f9b9ae5584308ad0cf84100f8ff24'
          'dbe4f3d3daa53ed52d95890fca2b6141')
 

@@ -18,10 +18,14 @@ source=("http://downloads.sourceforge.net/sourceforge/${pkgname}/phpMyAdmin-$pkg
 md5sums=('093a22e8ffc7c701e8a671491abbd650')
 
 build() {
+  msg "Nothing to compile for $pkgname"
+}
+
+package() {
   _INSTDIR="$pkgdir/srv/http/$pkgname"
   
   # Create destination directory
-  mkdir -p -m755 ${_instdir}
+  mkdir -p -m755 $_INSTDIR
   
   cp -ra $srcdir/phpMyAdmin-${pkgver}-all-languages/* $_INSTDIR || return 1
 
@@ -31,6 +35,7 @@ allow from 127.0.0.0/8
 EOF
   
   # apache config
+  mkdir -p $pkgdir/etc/httpd/conf/extra/
   cat > $pkgdir/etc/httpd/conf/extra/$pkgname.conf <<EOF
 Alias /$pkgname "$_INSTDIR"
 <Directory "$_INSTDIR">
